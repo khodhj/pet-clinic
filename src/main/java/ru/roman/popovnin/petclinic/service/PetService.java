@@ -1,13 +1,13 @@
 package ru.roman.popovnin.petclinic.service;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import ru.roman.popovnin.petclinic.exceptions.PetNotFoundException;
 import ru.roman.popovnin.petclinic.model.Pet;
-import ru.roman.popovnin.petclinic.model.PetOwner;
 import ru.roman.popovnin.petclinic.repository.PetRepository;
 
-import javax.transaction.Transactional;
-import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
@@ -16,33 +16,31 @@ public class PetService {
 
     private final PetRepository petRepository;
 
+    private final static Sort SORT_ASC = new Sort(Sort.Direction.ASC, "age");
+
     public PetService(PetRepository petRepository) {
         this.petRepository = petRepository;
     }
 
     @Transactional
-    public void createPet(String name){
-        Pet pet = new Pet();
-        pet.setName(name);
+    public void createPet(String name) {
+        petRepository.save(new Pet(name));
+    }
 
+    @Transactional(readOnly = true)
+    public Pet getPet(int id) {
+        return petRepository.findById(id).orElseThrow(() -> new PetNotFoundException());
+    }
+
+    @Transactional
+    public void setAge(int id, int age) {
+        Pet pet = getPet(id);
+        pet.setAge(age);
         petRepository.save(pet);
     }
 
     @Transactional
-    public Pet getPet(int id){
-
-        return petRepository.getOne(id);
+    public List<Pet> getPetsByAgeFromClinic(int age, int clinicId) {
+        return petRepository.getPetsByAgeFromClinic(age, clinicId, SORT_ASC);
     }
-
-    @Transactional
-    public void buyPet(Pet pet, PetOwner petOwner) {
-
-        pet.getOwners().add(petOwner);
-
-        log.info("pet to str: {}", pet);
-
-        petRepository.save(pet);
-
-    }
-
 }

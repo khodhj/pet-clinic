@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Objects;
 
 @Entity
-public class PetOwner {
+public class Owner {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -14,8 +14,19 @@ public class PetOwner {
 
     private String name;
 
-    @ManyToMany(mappedBy = "owners")
-    private List<Pet> pets = new ArrayList<>();
+    @ManyToMany(cascade = CascadeType.ALL)
+    @JoinTable(name = "owners_pets",
+            joinColumns = @JoinColumn(name = "owner_id"),
+            inverseJoinColumns = @JoinColumn(name = "pet_id")
+    )
+    private List<Pet> pets = new ArrayList<Pet>();
+
+    public Owner() {
+    }
+
+    public Owner(String name) {
+        this.name = name;
+    }
 
     public int getId() {
         return id;
@@ -45,15 +56,14 @@ public class PetOwner {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        PetOwner petOwner = (PetOwner) o;
-        return id == petOwner.id &&
-                Objects.equals(name, petOwner.name) &&
-                Objects.equals(pets, petOwner.pets);
+        Owner owner = (Owner) o;
+        return id == owner.id &&
+                Objects.equals(name, owner.name);
     }
 
     @Override
     public int hashCode() {
 
-        return Objects.hash(id, name, pets);
+        return Objects.hash(id, name);
     }
 }
